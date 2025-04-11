@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Model</title>
+</head>
+<body>
+  <h1>Upload .onnx model</h1>
+  <form id="form">
+    <input type="file" name="model" accept=".onnx" required>
+    <button type="submit">Upload & Download</button>
+  </form>
+
+  <script>
+    const form = document.getElementById('form');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+
+      try {
+        const res = await fetch('http://localhost:3000/codegen', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          alert("Server error:\n" + text);
+          return;
+        }
+
+        const blob = await res.blob();
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = "model.zip";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(downloadUrl);
+      } catch (err) {
+        alert("Failed: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Report a Bug"
+    url: "/issues/new?template=bug_report.md"
+    about: "Report a bug or issue with the project."
+  - name: "Request a New Feature"
+    url: "/issues/new?template=new-feature-.md"
+    about: "Suggest a new feature or enhancement."
+  - name: "Request Refactoring"
+    url: "/issues/new?template=refactor-.md"
+    about: "Suggest refactoring for the project codebase."
+  - name: "Tensor Math issue"
+    url: "/issues/new?template=tensor_math_template.md"
+    about: "Suggest refactoring/implementation for the Tensor Math."
