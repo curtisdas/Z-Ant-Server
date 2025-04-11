@@ -1,4 +1,5 @@
 const std = @import("std");
+const constants = @import("constants.zig");
 
 pub fn runZantCodeGen(allocator: std.mem.Allocator, file_name: []const u8, data: []const u8) ![]const u8 {
     try writeFileToDB(allocator, file_name, data);
@@ -7,7 +8,7 @@ pub fn runZantCodeGen(allocator: std.mem.Allocator, file_name: []const u8, data:
 }
 
 fn writeFileToDB(allocator: std.mem.Allocator, file_name: []const u8, data: []const u8) !void {
-    const dir_path = try std.fmt.allocPrint(allocator, "vendor/Z-Ant/datasets/models/{s}", .{file_name});
+    const dir_path = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ constants.MODELS_PATH, file_name });
     defer allocator.free(dir_path);
     try std.fs.cwd().makePath(dir_path);
     const file_path = try std.fmt.allocPrint(allocator, "{s}/{s}.onnx", .{ dir_path, file_name });
@@ -31,7 +32,7 @@ fn codeGen(allocator: std.mem.Allocator, file_name: []const u8) !void {
 fn zipFolder(allocator: std.mem.Allocator, file_name: []const u8) ![]const u8 {
     // Zip the folder
     const zip_name = try std.fmt.allocPrint(allocator, "{s}.zip", .{file_name});
-    const zip_path = try std.fmt.allocPrint(allocator, "vendor/Z-Ant/generated/{s}", .{file_name});
+    const zip_path = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ constants.GENERATED_PATH, file_name });
     defer allocator.free(zip_name);
     defer allocator.free(zip_path);
     var zip_args = [_][]const u8{
@@ -41,10 +42,10 @@ fn zipFolder(allocator: std.mem.Allocator, file_name: []const u8) ![]const u8 {
         file_name,
     };
     var zip_child = std.process.Child.init(&zip_args, allocator);
-    zip_child.cwd = "vendor/Z-Ant/generated";
+    zip_child.cwd = constants.GENERATED_PATH;
     try zip_child.spawn();
     const zip_result = try zip_child.wait();
     if (zip_result.Exited != 0) return error.ZipFailed;
 
-    return try std.fmt.allocPrint(allocator, "vendor/Z-Ant/generated/{s}", .{zip_name});
+    return try std.fmt.allocPrint(allocator, "{s}/{s}", .{ constants.GENERATED_PATH, zip_name });
 }
