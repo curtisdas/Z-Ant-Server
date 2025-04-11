@@ -37,8 +37,8 @@
     // internet connectivity.
     .dependencies = .{
         .zap = .{
-            .url = "git+https://github.com/zigzap/zap?ref=v0.10.1#8d187310c7ee4f86faa7ef0ecdac0bf747216dea",
-            .hash = "zap-0.9.1-GoeB84M8JACjZKDNq2LA5hB24Z-ZrZ_HUKRXd8qxL2JW",
+            .url = "git+https://github.com/zigzap/zap?ref=master#8078b96d3f2bd3517e7e12d7609db45b15c20c02",
+            .hash = "zap-0.9.1-GoeB8zBOJAAFXit6idaxejwAtPn9iYgCXwzybs1zxUgc",
         },
     },
     .paths = .{
