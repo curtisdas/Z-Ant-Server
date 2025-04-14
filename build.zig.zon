@@ -40,6 +40,10 @@
             .url = "git+https://github.com/zigzap/zap?ref=master#8078b96d3f2bd3517e7e12d7609db45b15c20c02",
             .hash = "zap-0.9.1-GoeB8zBOJAAFXit6idaxejwAtPn9iYgCXwzybs1zxUgc",
         },
+        .zant = .{
+            .url = "git+https://github.com/ZantFoundation/Z-Ant?ref=main#0a3960c7850b64893973525094139e96967d154f",
+            .hash = "N-V-__8AAFPvMgHu-ggOML8ijisKYLXWJvRPGWND8HtoRpYS",
+        },
     },
     .paths = .{
         "build.zig",

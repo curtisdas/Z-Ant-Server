@@ -1,8 +1,10 @@
 const std = @import("std");
 const zap = @import("zap");
 const Runner = @import("../runner.zig");
-
+const Constants = @import("../constants.zig");
 pub const CodeGen = @This();
+
+const cg = @import("codegen");
 
 allocator: std.mem.Allocator = undefined,
 path: []const u8,
@@ -24,8 +26,8 @@ pub fn put(_: *CodeGen, _: zap.Request) !void {}
 pub fn get(_: *CodeGen, _: zap.Request) !void {}
 pub fn patch(_: *CodeGen, _: zap.Request) !void {}
 pub fn delete(_: *CodeGen, _: zap.Request) !void {}
-
 pub fn post(self: *CodeGen, r: zap.Request) !void {
+    //try self.options(r);
     try r.parseBody();
 
     const params = try r.parametersToOwnedList(self.allocator);
@@ -49,8 +51,8 @@ pub fn post(self: *CodeGen, r: zap.Request) !void {
                 _ = try zip_file.readAll(zip_data);
 
                 try r.setHeader("Content-Type", "application/zip");
+                try r.setHeader("Access-Control-Allow-Origin", Constants.WEBSITE_URL);
                 try r.setHeader("Content-Disposition", "attachment; filename=\"codegen.zip\"");
-                try r.setHeader("Access-Control-Allow-Origin", "*");
                 try r.sendBody(zip_data);
             } else {
                 try r.sendBody("File name not found\n");
@@ -64,7 +66,7 @@ pub fn post(self: *CodeGen, r: zap.Request) !void {
 }
 
 pub fn options(_: *CodeGen, r: zap.Request) !void {
-    try r.setHeader("Access-Control-Allow-Origin", "*");
+    try r.setHeader("Access-Control-Allow-Origin", "http://localhost:8000");
     try r.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
     r.setStatus(zap.http.StatusCode.no_content);
     r.markAsFinished(true);
