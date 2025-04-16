@@ -1,7 +1,8 @@
 const std = @import("std");
 const zap = @import("zap");
-const Generate = @import("endpoints/codegen/generate.zig");
-const Download = @import("endpoints/codegen/download.zig");
+
+const Codegen = @import("endpoints/codegen.zig");
+const Netron = @import("endpoints/netron.zig");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{
@@ -24,15 +25,15 @@ pub fn main() !void {
         defer listener.deinit();
 
         // /users endpoint
-        var generate = Generate.init(allocator, "/codegen/generate");
-        defer generate.deinit();
+        var codegen = Codegen.init(allocator, "/codegen");
+        defer codegen.deinit();
 
-        var download = Download.init(allocator, "/codegen/download");
-        defer download.deinit();
+        var netron = Netron.init(allocator, "/netron");
+        defer netron.deinit();
 
         // register endpoints with the listener
-        try listener.register(&generate);
-        try listener.register(&download);
+        try listener.register(&codegen);
+        try listener.register(&netron);
 
         try listener.listen();
 

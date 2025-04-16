@@ -48,3 +48,7 @@ fn zipFolder(allocator: std.mem.Allocator, file_name: []const u8, random_id: []c
     const zip_result = try zip_child.wait();
     if (zip_result.Exited != 0) return error.ZipFailed;
 }
+
+pub fn runNetron(allocator: std.mem.Allocator, file_name: []const u8) !void {
+    
+}

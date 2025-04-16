@@ -1,8 +1,8 @@
 const std = @import("std");
 const zap = @import("zap");
-const Runner = @import("../../runner.zig");
-const Constants = @import("../../constants.zig");
-pub const Generate = @This();
+const Runner = @import("../runner.zig");
+const Constants = @import("../constants.zig");
+pub const Codegen = @This();
 
 allocator: std.mem.Allocator = undefined,
 path: []const u8,
@@ -11,20 +11,49 @@ error_strategy: zap.Endpoint.ErrorStrategy = .log_to_response,
 pub fn init(
     allocator: std.mem.Allocator,
     path: []const u8,
-) Generate {
+) Codegen {
     return .{
         .allocator = allocator,
         .path = path,
     };
 }
 
-pub fn deinit(_: *Generate) void {}
+pub fn deinit(_: *Codegen) void {}
 
-pub fn put(_: *Generate, _: zap.Request) !void {}
-pub fn get(_: *Generate, _: zap.Request) !void {}
-pub fn patch(_: *Generate, _: zap.Request) !void {}
-pub fn delete(_: *Generate, _: zap.Request) !void {}
-pub fn post(self: *Generate, r: zap.Request) !void {
+pub fn put(_: *Codegen, _: zap.Request) !void {}
+pub fn get(self: *Codegen, r: zap.Request) !void {
+    r.parseQuery();
+    const params = try r.parametersToOwnedList(self.allocator);
+    defer params.deinit();
+
+    for (params.items) |param| {
+        if (std.mem.eql(u8, param.key, "id")) {
+            const id = param.value;
+            if (id) |filename| {
+                const zip_path = try std.fmt.allocPrint(self.allocator, "{s}/{s}.zip", .{ Constants.GENERATED_PATH, filename.String });
+                defer self.allocator.free(zip_path);
+                const file = try std.fs.cwd().openFile(zip_path, .{});
+                defer file.close();
+
+                const stat = try file.stat();
+                const zip_data = try self.allocator.alloc(u8, stat.size);
+                _ = try file.readAll(zip_data);
+
+                try r.setHeader("Content-Type", "application/zip");
+                try r.setHeader("Access-Control-Allow-Origin", Constants.WEBSITE_URL);
+                try r.setHeader("Content-Disposition", "attachment; filename=\"codegen.zip\"");
+                try r.sendBody(zip_data);
+            } else {
+                try r.sendBody("File name not found\n");
+            }
+        }
+    }
+}
+
+pub fn patch(_: *Codegen, _: zap.Request) !void {}
+pub fn delete(_: *Codegen, _: zap.Request) !void {}
+
+pub fn post(self: *Codegen, r: zap.Request) !void {
     //try self.options(r);
     try r.parseBody();
 
@@ -68,7 +97,7 @@ pub fn post(self: *Generate, r: zap.Request) !void {
     }
 }
 
-pub fn options(_: *Generate, r: zap.Request) !void {
+pub fn options(_: *Codegen, r: zap.Request) !void {
     try r.setHeader("Access-Control-Allow-Origin", "http://localhost:8000");
     try r.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
     r.setStatus(zap.http.StatusCode.no_content);
