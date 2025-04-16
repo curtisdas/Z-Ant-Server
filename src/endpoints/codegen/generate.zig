@@ -1,10 +1,8 @@
 const std = @import("std");
 const zap = @import("zap");
-const Runner = @import("../runner.zig");
-const Constants = @import("../constants.zig");
-pub const CodeGen = @This();
-
-const cg = @import("codegen");
+const Runner = @import("../../runner.zig");
+const Constants = @import("../../constants.zig");
+pub const Generate = @This();
 
 allocator: std.mem.Allocator = undefined,
 path: []const u8,
@@ -13,20 +11,20 @@ error_strategy: zap.Endpoint.ErrorStrategy = .log_to_response,
 pub fn init(
     allocator: std.mem.Allocator,
     path: []const u8,
-) CodeGen {
+) Generate {
     return .{
         .allocator = allocator,
         .path = path,
     };
 }
 
-pub fn deinit(_: *CodeGen) void {}
+pub fn deinit(_: *Generate) void {}
 
-pub fn put(_: *CodeGen, _: zap.Request) !void {}
-pub fn get(_: *CodeGen, _: zap.Request) !void {}
-pub fn patch(_: *CodeGen, _: zap.Request) !void {}
-pub fn delete(_: *CodeGen, _: zap.Request) !void {}
-pub fn post(self: *CodeGen, r: zap.Request) !void {
+pub fn put(_: *Generate, _: zap.Request) !void {}
+pub fn get(_: *Generate, _: zap.Request) !void {}
+pub fn patch(_: *Generate, _: zap.Request) !void {}
+pub fn delete(_: *Generate, _: zap.Request) !void {}
+pub fn post(self: *Generate, r: zap.Request) !void {
     //try self.options(r);
     try r.parseBody();
 
@@ -40,20 +38,25 @@ pub fn post(self: *CodeGen, r: zap.Request) !void {
                 const dot_index = std.mem.lastIndexOf(u8, fname, ".") orelse fname.len;
                 const filename = fname[0..dot_index];
 
-                const zip_path = try Runner.runZantCodeGen(self.allocator, filename, data);
-                std.debug.print("{s}", .{zip_path});
+                // Generate a random ID (e.g., UUID v4)
+                var random_bytes: [16]u8 = undefined;
+                std.crypto.random.bytes(&random_bytes);
 
-                const zip_file = try std.fs.cwd().openFile(zip_path, .{});
-                defer zip_file.close();
+                // Format as hex string
+                const random_id = std.fmt.bytesToHex(random_bytes, std.fmt.Case.lower);
 
-                const stat = try zip_file.stat();
-                const zip_data = try self.allocator.alloc(u8, stat.size);
-                _ = try zip_file.readAll(zip_data);
+                try Runner.runZantCodeGen(self.allocator, filename, data, &random_id);
+                // If id is binary data, convert it to hex or base64
 
-                try r.setHeader("Content-Type", "application/zip");
+                const response = .{
+                    .message = "Code generation completed successfully",
+                    .id = &random_id,
+                };
+
+                const json_str = try std.json.stringifyAlloc(self.allocator, response, .{});
+                try r.setHeader("Content-Type", "application/json");
                 try r.setHeader("Access-Control-Allow-Origin", Constants.WEBSITE_URL);
-                try r.setHeader("Content-Disposition", "attachment; filename=\"codegen.zip\"");
-                try r.sendBody(zip_data);
+                try r.sendBody(json_str);
             } else {
                 try r.sendBody("File name not found\n");
             }
@@ -65,7 +68,7 @@ pub fn post(self: *CodeGen, r: zap.Request) !void {
     }
 }
 
-pub fn options(_: *CodeGen, r: zap.Request) !void {
+pub fn options(_: *Generate, r: zap.Request) !void {
     try r.setHeader("Access-Control-Allow-Origin", "http://localhost:8000");
     try r.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
     r.setStatus(zap.http.StatusCode.no_content);
