@@ -29,7 +29,7 @@ pub fn build(b: *std.Build) void {
     // This creates another `std.Build.Step.Compile`, but this one builds an executable
     // rather than a static library.
     const exe = b.addExecutable(.{
-        .name = "Z_Ant_Server",
+        .name = "zant-server",
         .root_module = exe_mod,
     });
 
@@ -41,6 +41,13 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.root_module.addImport("zap", zap.module("zap"));
+
+    const zant_dep = b.dependency("zant", .{
+        .target = target,
+    });
+
+    const codegen_art = zant_dep.artifact("Codegen");
+    exe.root_module.addImport("codegen", codegen_art.root_module);
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
